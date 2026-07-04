@@ -1,0 +1,104 @@
+// Leverteam CRM — Prisma schema
+// Models: User, Lead, Niche, Stage
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Roles
+// ─────────────────────────────────────────────────────────────
+enum Role {
+  ADMIN // Администратор (Роман) — полный доступ
+  SALES // Продажник — видит только своих лидов
+}
+
+// ─────────────────────────────────────────────────────────────
+// User — сотрудники системы (админы и продажники)
+// ─────────────────────────────────────────────────────────────
+model User {
+  id           String   @id @default(cuid())
+  name         String // отображаемое имя
+  username     String   @unique // логин
+  telegram     String? // @username в телеграме
+  passwordHash String
+  role         Role     @default(SALES)
+  active       Boolean  @default(true) // "уволенных" деактивируем вместо удаления
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Лиды, закреплённые за этим продажником
+  leads Lead[] @relation("SalesRepLeads")
+
+  @@index([role])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Niche — ниши/категории экспертов (РКО, Нейросети, ...)
+// ─────────────────────────────────────────────────────────────
+model Niche {
+  id    String @id @default(cuid())
+  key   String @unique // машинный ключ (rko, neuro, ...)
+  name  String // отображаемое имя (РКО, Нейросети, ...)
+  color String // цветовой токен для бейджа (emerald, violet, ...)
+  order Int    @default(0) // порядок в фильтрах
+
+  leads Lead[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// Stage — этапы воронки продаж (колонки канбан-доски)
+// ─────────────────────────────────────────────────────────────
+model Stage {
+  id    String @id @default(cuid())
+  key   String @unique // машинный ключ (new, first_touch, ...)
+  name  String // отображаемое имя (Новые, Первое касание, ...)
+  color String // цветовой токен
+  order Int    @default(0) // порядок колонок слева направо
+
+  leads Lead[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// Lead — карточка сделки/эксперта на доске
+// ─────────────────────────────────────────────────────────────
+model Lead {
+  id String @id @default(cuid())
+
+  title           String // заголовок (обычно ссылка/имя в Telegram)
+  telegramLink    String? // ссылка на Telegram
+  username        String? // username эксперта
+  trafferName     String? // траффер — имя
+  trafferUsername String? // траффер — @username
+  producerName    String? // продюсер — имя
+  notes           String? // произвольные заметки
+
+  pinned   Boolean @default(false) // закреплена ли карточка (булавка)
+  position Float   @default(0) // сортировка внутри колонки
+
+  // Ниша
+  nicheId String?
+  niche   Niche?  @relation(fields: [nicheId], references: [id], onDelete: SetNull)
+
+  // Этап воронки
+  stageId String
+  stage   Stage  @relation(fields: [stageId], references: [id])
+
+  // Закреплённый продажник (Sales Rep)
+  salesRepId String?
+  salesRep   User?   @relation("SalesRepLeads", fields: [salesRepId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) // "Добавлен"
+  updatedAt DateTime @updatedAt
+
+  @@index([stageId])
+  @@index([salesRepId])
+  @@index([nicheId])
+  @@index([pinned])
+}

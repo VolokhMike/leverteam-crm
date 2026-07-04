@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker --version)",
+      "Bash(powershell -Command \"Test-NetConnection -ComputerName localhost -Port 5432 -InformationLevel Quiet\")",
+      "Bash(powershell -Command \"Test-NetConnection -ComputerName localhost -Port 3000 -InformationLevel Quiet\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(powershell *)",
+      "Bash(curl -s -i http://localhost:3000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/login)",
+      "Bash(docker compose *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/api/niches)",
+      "Bash(curl -s http://localhost:3000/api/auth/providers)",
+      "Bash(cd /tmp)",
+      "Bash(rm -f jar_alex.txt)",
+      "Bash(curl -s -c jar_alex.txt http://localhost:3000/api/auth/csrf)",
+      "Bash(curl -s -b jar_alex.txt \"http://localhost:3000/api/leads\")",
+      "Bash(xargs echo \"alex leads:\")",
+      "Bash(curl -s -b jar_alex.txt http://localhost:3000/api/metrics)",
+      "Bash(curl -s -o /dev/null -w \"users API: %{http_code}\\\\n\" -b jar_alex.txt http://localhost:3000/api/users)",
+      "Bash(curl -s -o /dev/null -w \"employees page: %{http_code}\\\\n\" -b jar_alex.txt http://localhost:3000/admin/employees)",
+      "Bash(curl -s -o /dev/null -w \"board: %{http_code}\\\\n\" -b jar_alex.txt http://localhost:3000/board)",
+      "Bash(python -c ' *)",
+      "Bash(echo \"dev server starting, pid $!\")",
+      "Bash(grep -v \"Update available\\\\|major update\\\\|pris.ly\\\\|npm i\\\\|^│\\\\|^└\\\\|^┌\\\\|^$\")",
+      "Bash(rm -f jar2.txt)",
+      "Bash(curl -s -c jar2.txt http://localhost:3000/api/auth/csrf)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\([n['name'] for n in d]\\)\")",
+      "Bash(curl -s -o /dev/null -w \"board: %{http_code}\\\\n\" -b jar2.txt http://localhost:3000/board)",
+      "Bash(curl -s -o /dev/null -w \"employees: %{http_code}\\\\n\" -b jar2.txt http://localhost:3000/admin/employees)",
+      "Bash(curl -s -b jar2.txt http://localhost:3000/api/metrics)",
+      "Bash(curl -s http://localhost:3000/api/niches)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('API niches:', [n['name'] for n in d]\\)\")",
+      "Bash(docker exec jlbcrm-db *)"
+    ]
+  }
+}

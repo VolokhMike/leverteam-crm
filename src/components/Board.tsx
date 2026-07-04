@@ -1,0 +1,277 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
+import {
+  DndContext,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+  PointerSensor,
+  KeyboardSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { Loader2 } from "lucide-react";
+import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
+import Metrics from "@/components/Metrics";
+import Filters from "@/components/Filters";
+import Column from "@/components/Column";
+import { LeadCardView } from "@/components/LeadCard";
+import LeadModal from "@/components/LeadModal";
+import { fetcher, mutateJson } from "@/lib/fetcher";
+import type {
+  Lead,
+  Niche,
+  Stage,
+  Metrics as MetricsType,
+  SalesRep,
+} from "@/lib/types";
+
+type Props = {
+  user: { id: string; name?: string | null; role: "ADMIN" | "SALES" };
+};
+
+function positionForIndex(list: Lead[], index: number): number {
+  if (list.length === 0) return 1000;
+  if (index <= 0) return list[0].position - 1000;
+  if (index >= list.length) return list[list.length - 1].position + 1000;
+  return (list[index - 1].position + list[index].position) / 2;
+}
+
+export default function Board({ user }: Props) {
+  const isAdmin = user.role === "ADMIN";
+
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [activeNiche, setActiveNiche] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Lead | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Debounce the search input.
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const params = new URLSearchParams();
+  if (debounced) params.set("search", debounced);
+  if (activeNiche) params.set("niche", activeNiche);
+  const leadsKey = `/api/leads?${params.toString()}`;
+
+  const { data: niches = [] } = useSWR<Niche[]>("/api/niches", fetcher);
+  const { data: stages = [] } = useSWR<Stage[]>("/api/stages", fetcher);
+  const { data: metrics, mutate: mutateMetrics } = useSWR<MetricsType>(
+    "/api/metrics",
+    fetcher,
+  );
+  const { data: salesReps = [] } = useSWR<SalesRep[]>(
+    isAdmin ? "/api/users?role=SALES" : null,
+    fetcher,
+  );
+  const {
+    data: leads = [],
+    isLoading,
+    mutate,
+  } = useSWR<Lead[]>(leadsKey, fetcher);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  // Group leads by stage, sorted (pinned first, then position).
+  const byStage = useMemo(() => {
+    const map = new Map<string, Lead[]>();
+    for (const s of stages) map.set(s.id, []);
+    for (const l of leads) {
+      if (!map.has(l.stageId)) map.set(l.stageId, []);
+      map.get(l.stageId)!.push(l);
+    }
+    for (const [, list] of map) {
+      list.sort((a, b) => {
+        if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+        return a.position - b.position;
+      });
+    }
+    return map;
+  }, [leads, stages]);
+
+  const activeLead = activeId ? leads.find((l) => l.id === activeId) : null;
+
+  function refresh() {
+    mutate();
+    mutateMetrics();
+  }
+
+  // ─── Quick actions ────────────────────────────────────────
+  async function persist(id: string, patch: Record<string, unknown>, next: Lead[]) {
+    mutate(next, { revalidate: false });
+    try {
+      await mutateJson(`/api/leads/${id}`, "PATCH", patch);
+    } finally {
+      refresh();
+    }
+  }
+
+  function onMoveStage(lead: Lead, stageKey: string) {
+    const target = stages.find((s) => s.key === stageKey);
+    if (!target || target.id === lead.stageId) return;
+    const targetList = leads
+      .filter((l) => l.stageId === target.id)
+      .sort((a, b) => a.position - b.position);
+    const position = positionForIndex(targetList, targetList.length);
+    const next = leads.map((l) =>
+      l.id === lead.id ? { ...l, stageId: target.id, stage: target, position } : l,
+    );
+    persist(lead.id, { stageId: target.id, position }, next);
+  }
+
+  function onTogglePin(lead: Lead) {
+    const next = leads.map((l) =>
+      l.id === lead.id ? { ...l, pinned: !l.pinned } : l,
+    );
+    persist(lead.id, { pinned: !lead.pinned }, next);
+  }
+
+  // ─── Drag & drop ──────────────────────────────────────────
+  function onDragStart(e: DragStartEvent) {
+    setActiveId(String(e.active.id));
+  }
+
+  function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    setActiveId(null);
+    if (!over) return;
+
+    const dragged = leads.find((l) => l.id === active.id);
+    if (!dragged) return;
+
+    const overData = over.data.current as
+      | { type?: string; stageId?: string; lead?: Lead }
+      | undefined;
+
+    let targetStageId: string | undefined;
+    let overLead: Lead | undefined;
+    if (overData?.type === "column") {
+      targetStageId = overData.stageId;
+    } else if (overData?.type === "lead") {
+      overLead = overData.lead;
+      targetStageId = overLead?.stageId;
+    } else {
+      targetStageId = String(over.id);
+    }
+    if (!targetStageId) return;
+
+    const targetList = leads
+      .filter((l) => l.stageId === targetStageId && l.id !== dragged.id)
+      .sort((a, b) => a.position - b.position);
+
+    let index = targetList.length;
+    if (overLead && overLead.id !== dragged.id) {
+      const oi = targetList.findIndex((l) => l.id === overLead!.id);
+      if (oi >= 0) index = oi;
+    }
+
+    const position = positionForIndex(targetList, index);
+    if (targetStageId === dragged.stageId && position === dragged.position) return;
+
+    const targetStage = stages.find((s) => s.id === targetStageId);
+    const next = leads.map((l) =>
+      l.id === dragged.id
+        ? { ...l, stageId: targetStageId!, stage: targetStage ?? l.stage, position }
+        : l,
+    );
+    persist(dragged.id, { stageId: targetStageId, position }, next);
+  }
+
+  const orderedStages = [...stages].sort((a, b) => a.order - b.order);
+
+  return (
+    <>
+      <Sidebar user={user} />
+      <div className="flex min-h-screen flex-col pl-16 md:pl-60">
+      <Header user={user} center={<Metrics metrics={metrics} />} />
+
+      <div className="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 lg:px-6">
+        <Filters
+          niches={niches}
+          activeNiche={activeNiche}
+          onNiche={setActiveNiche}
+          search={search}
+          onSearch={setSearch}
+          canAdd
+          onAdd={() => {
+            setEditing(null);
+            setModalOpen(true);
+          }}
+        />
+      </div>
+
+      <main className="flex-1 overflow-hidden px-4 py-4 lg:px-6">
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center text-slate-400">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Загрузка доски…
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+          >
+            <div className="scrollbar-thin flex gap-4 overflow-x-auto pb-3">
+              {orderedStages.map((stage) => (
+                <Column
+                  key={stage.id}
+                  stage={stage}
+                  leads={byStage.get(stage.id) ?? []}
+                  stages={orderedStages}
+                  onEdit={(l) => {
+                    setEditing(l);
+                    setModalOpen(true);
+                  }}
+                  onTogglePin={onTogglePin}
+                  onMoveStage={onMoveStage}
+                />
+              ))}
+            </div>
+
+            <DragOverlay>
+              {activeLead ? (
+                <div className="w-[280px]">
+                  <LeadCardView
+                    lead={activeLead}
+                    stages={orderedStages}
+                    onEdit={() => {}}
+                    onTogglePin={() => {}}
+                    onMoveStage={() => {}}
+                    overlay
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
+      </main>
+
+      <LeadModal
+        open={modalOpen}
+        lead={editing}
+        niches={niches}
+        stages={orderedStages}
+        salesReps={salesReps}
+        isAdmin={isAdmin}
+        onClose={() => setModalOpen(false)}
+        onSaved={refresh}
+      />
+      </div>
+    </>
+  );
+}
