@@ -107,3 +107,39 @@ src/
 | `GET/PATCH/DELETE` | `/api/users/:id` | только админ |
 | `GET` | `/api/metrics` | по роли |
 | `GET` | `/api/niches`, `/api/stages` | авторизованные |
+
+## Деплой на Netlify
+
+Проект настроен под Netlify (`netlify.toml` + `@netlify/plugin-nextjs`,
+`binaryTargets` для Prisma). Что нужно сделать при деплое:
+
+### 1. Облачная база данных (обязательно)
+
+Локальный `localhost:5432` на Netlify недоступен. Заведите PostgreSQL в облаке
+([Neon](https://neon.tech) / [Supabase](https://supabase.com) / Railway).
+Для serverless-функций используйте **pooled**-строку подключения
+(Neon: «Pooled connection», Supabase: порт `6543` / PgBouncer).
+
+### 2. Переменные окружения (Site settings → Environment variables)
+
+| Переменная | Значение |
+|------------|----------|
+| `DATABASE_URL` | pooled-строка подключения к облачному Postgres |
+| `NEXTAUTH_SECRET` | длинная случайная строка (`openssl rand -base64 32`) |
+| `NEXTAUTH_URL` | URL сайта, напр. `https://<site>.netlify.app` |
+| `ADMIN_NAME` | `Роман` |
+| `ADMIN_USERNAME` | `roman` |
+| `ADMIN_PASSWORD` | пароль администратора |
+
+> `NODE_VERSION=20` уже задан в `netlify.toml`.
+
+### 3. Инициализировать схему и данные (один раз)
+
+Локально, указав `DATABASE_URL` от облачной БД:
+
+```bash
+DATABASE_URL="<облачный-URL>" npm run db:push    # создать таблицы
+DATABASE_URL="<облачный-URL>" npm run db:seed    # админ, ниши, этапы, демо-лиды
+```
+
+После этого задеплойте — Netlify сам поставит рантайм Next.js и соберёт проект.

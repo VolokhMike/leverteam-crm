@@ -1,0 +1,14 @@
+# Netlify configuration for Leverteam CRM (Next.js 14 + Prisma)
+
+[build]
+  # `npm run build` = prisma generate && next build
+  command = "npm run build"
+
+[build.environment]
+  # Next.js 14 требует Node >= 18. Node 20 — актуальный LTS.
+  NODE_VERSION = "20"
+
+# Официальный рантайм Next.js для Netlify: SSR, API-роуты, middleware.
+# Netlify устанавливает плагин автоматически при деплое.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
