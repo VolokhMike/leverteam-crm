@@ -16,7 +16,7 @@ type Props = {
   onEdit: (lead: Lead) => void;
   onTogglePin: (lead: Lead) => void;
   onMoveStage: (lead: Lead, stageKey: string) => void;
-  currentUser?: { id: string; role: "ADMIN" | "SALES" };
+  currentUser?: { id: string; role: "ADMIN" | "SALES" | "TRAFFER" };
   onTake?: (lead: Lead) => void;
   /** Растянуть колонку на всю ширину (мобильный вид с вкладками). */
   fluid?: boolean;

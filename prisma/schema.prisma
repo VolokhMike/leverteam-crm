@@ -18,8 +18,9 @@ datasource db {
 // Roles
 // ─────────────────────────────────────────────────────────────
 enum Role {
-  ADMIN // Администратор (Роман) — полный доступ
-  SALES // Продажник — видит только своих лидов
+  ADMIN   // Администратор (Роман) — полный доступ
+  SALES   // Продажник — видит только закреплённых за ним лидов
+  TRAFFER // Трафер — заносит новых лидов, видит только приведённых им
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -38,6 +39,8 @@ model User {
 
   // Лиды, закреплённые за этим продажником
   leads Lead[] @relation("SalesRepLeads")
+  // Лиды, приведённые этим трафером
+  traffedLeads Lead[] @relation("TrafferLeads")
 
   @@index([role])
 }
@@ -77,8 +80,8 @@ model Lead {
   title           String // заголовок (обычно ссылка/имя в Telegram)
   telegramLink    String? // ссылка на Telegram
   username        String? // username эксперта
-  trafferName     String? // траффер — имя
-  trafferUsername String? // траффер — @username
+  trafferName     String? // траффер — имя (свободный текст, для старых данных)
+  trafferUsername String? // траффер — @username (свободный текст)
   notes           String? // произвольные заметки
 
   pinned   Boolean @default(false) // закреплена ли карточка (булавка)
@@ -96,11 +99,16 @@ model Lead {
   salesRepId String?
   salesRep   User?   @relation("SalesRepLeads", fields: [salesRepId], references: [id], onDelete: SetNull)
 
+  // Трафер, который привёл лида (заполняется автоматически при создании)
+  trafferId String?
+  traffer   User?   @relation("TrafferLeads", fields: [trafferId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now()) // "Добавлен"
   updatedAt DateTime @updatedAt
 
   @@index([stageId])
   @@index([salesRepId])
+  @@index([trafferId])
   @@index([nicheId])
   @@index([pinned])
 }

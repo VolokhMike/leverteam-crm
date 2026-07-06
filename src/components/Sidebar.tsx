@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { KanbanSquare, Shield, Settings } from "lucide-react";
+import { KanbanSquare, Shield, Settings, BarChart3 } from "lucide-react";
 import type { ReactNode } from "react";
+import { roleLabel } from "@/lib/constants";
 
 type Props = {
-  user: { name?: string | null; role: "ADMIN" | "SALES" };
+  user: { name?: string | null; role: "ADMIN" | "SALES" | "TRAFFER" };
 };
 
 /**
@@ -53,8 +54,14 @@ export default function Sidebar({ user }: Props) {
         {isAdmin &&
           navItem(
             "/admin/employees",
-            "Меню админа",
+            "Сотрудники",
             <Shield className="h-5 w-5" />,
+          )}
+        {isAdmin &&
+          navItem(
+            "/admin/team",
+            "Команда / Статистика",
+            <BarChart3 className="h-5 w-5" />,
           )}
         {isAdmin &&
           navItem(
@@ -66,7 +73,7 @@ export default function Sidebar({ user }: Props) {
 
       {/* Подпись роли внизу */}
       <div className="hidden px-4 py-4 text-xs text-stone-400 md:block dark:text-slate-500">
-        {isAdmin ? "Администратор" : "Продажник"}
+        {roleLabel(user.role)}
         <div className="truncate font-medium text-stone-600 dark:text-slate-400">
           {user.name}
         </div>

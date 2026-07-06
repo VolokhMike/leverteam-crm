@@ -4,9 +4,10 @@ import { signOut } from "next-auth/react";
 import { LogOut } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import type { ReactNode } from "react";
+import { roleLabel } from "@/lib/constants";
 
 type Props = {
-  user: { name?: string | null; role: "ADMIN" | "SALES" };
+  user: { name?: string | null; role: "ADMIN" | "SALES" | "TRAFFER" };
   center?: ReactNode;
 };
 

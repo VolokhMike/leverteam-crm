@@ -33,23 +33,23 @@ export const NICHES: SeedItem[] = [
 ];
 
 // ─── Этапы воронки (колонки доски) ──────────────────────────
-// «Холодные» — самая первая колонка: траферы закидывают сюда сырых лидов
-// без закреплённого продажника. Продажник «берёт в работу», перетаскивая
-// карточку дальше (или кнопкой «Взять себе»).
+// «Новые» — стартовая колонка: сюда попадают лиды, которых заносят траферы
+// (без закреплённого продажника). Админ распределяет их между продажниками
+// кнопкой «Распределить лидов».
 export const STAGES: SeedItem[] = [
-  { key: "cold", name: "Холодные", color: "sky", order: 1 },
-  { key: "new", name: "Новые", color: "slate", order: 2 },
-  { key: "first_touch", name: "Первое касание", color: "blue", order: 3 },
-  { key: "qualified", name: "Квалифицированные", color: "indigo", order: 4 },
-  { key: "call_queue", name: "Очередь на созвон", color: "amber", order: 5 },
-  { key: "producer", name: "В работе", color: "violet", order: 6 },
-  { key: "bought", name: "Купили", color: "emerald", order: 7 },
-  { key: "rejected", name: "Отказ", color: "rose", order: 8 },
+  { key: "new", name: "Новые", color: "slate", order: 1 },
+  { key: "first_touch", name: "Первое касание", color: "blue", order: 2 },
+  { key: "qualified", name: "Квалифицированные", color: "indigo", order: 3 },
+  { key: "call_queue", name: "Очередь на созвон", color: "amber", order: 4 },
+  { key: "producer", name: "В работе", color: "violet", order: 5 },
+  { key: "bought", name: "Купили", color: "emerald", order: 6 },
+  { key: "rejected", name: "Отказ", color: "rose", order: 7 },
 ];
 
 // Stage keys used by the "quick action" buttons on the card.
 export const STAGE_ORDER = STAGES.map((s) => s.key);
-export const COLD_STAGE = "cold";
+export const NEW_STAGE = "new";
+export const QUALIFIED_STAGE = "qualified";
 export const REJECTED_STAGE = "rejected";
 export const BOUGHT_STAGE = "bought";
 
@@ -148,4 +148,21 @@ export const COLOR_CLASSES: Record<
 
 export function colorClasses(token: string) {
   return COLOR_CLASSES[token as ColorToken] ?? COLOR_CLASSES.slate;
+}
+
+// ─── Роли ────────────────────────────────────────────────────
+export const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Администратор",
+  SALES: "Продажник",
+  TRAFFER: "Трафер",
+};
+
+export const ROLE_BADGE_COLORS: Record<string, ColorToken> = {
+  ADMIN: "violet",
+  SALES: "sky",
+  TRAFFER: "orange",
+};
+
+export function roleLabel(role: string): string {
+  return ROLE_LABELS[role] ?? role;
 }

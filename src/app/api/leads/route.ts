@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser, isAdmin, leadScopeForUser } from "@/lib/rbac";
+import {
+  getSessionUser,
+  isAdmin,
+  isTraffer,
+  leadScopeForUser,
+} from "@/lib/rbac";
 import { leadInclude } from "@/lib/queries";
+import { NEW_STAGE } from "@/lib/constants";
 
 // GET /api/leads?search=&niche=&stage=
 export async function GET(req: NextRequest) {
@@ -47,11 +53,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Заголовок обязателен" }, { status: 400 });
   }
 
-  // Resolve stage (id, key, or default to "new").
-  let stageId: string | undefined = body.stageId;
+  const traffer = isTraffer(user);
+
+  // Трафер всегда создаёт лида в стартовой колонке «Новые».
+  // Остальные могут указать этап (id, key), по умолчанию — «Новые».
+  let stageId: string | undefined = traffer ? undefined : body.stageId;
   if (!stageId) {
     const stage = await prisma.stage.findUnique({
-      where: { key: body.stageKey || "new" },
+      where: { key: traffer ? NEW_STAGE : body.stageKey || NEW_STAGE },
     });
     stageId = stage?.id;
   }
@@ -66,10 +75,29 @@ export async function POST(req: NextRequest) {
     nicheId = niche?.id ?? null;
   }
 
-  // Sales reps can only assign leads to themselves.
-  const salesRepId = isAdmin(user)
-    ? (body.salesRepId ?? null)
-    : user.id;
+  // Кто закреплён продажником:
+  //  - трафер: никто (лид нераспределён, ждёт «Распределить лидов»);
+  //  - продажник: только сам себе;
+  //  - админ: как указано.
+  const salesRepId = traffer
+    ? null
+    : isAdmin(user)
+      ? body.salesRepId ?? null
+      : user.id;
+
+  // Кто трафер (привёл лида):
+  //  - трафер: он сам (автоматически);
+  //  - админ: как указано (опционально);
+  //  - продажник: как указано (обычно не заполняется).
+  const trafferId = traffer ? user.id : body.trafferId ?? null;
+
+  // Для отображения в карточке сохраняем и текстовые поля трафера.
+  const trafferName = traffer
+    ? user.name ?? user.username
+    : body.trafferName || null;
+  const trafferUsername = traffer
+    ? `@${user.username}`
+    : body.trafferUsername || null;
 
   // Place at the bottom of the target column.
   const last = await prisma.lead.findFirst({
@@ -84,14 +112,15 @@ export async function POST(req: NextRequest) {
       title: body.title.trim(),
       telegramLink: body.telegramLink || null,
       username: body.username || null,
-      trafferName: body.trafferName || null,
-      trafferUsername: body.trafferUsername || null,
+      trafferName,
+      trafferUsername,
       notes: body.notes || null,
       pinned: Boolean(body.pinned),
       position,
       stageId,
       nicheId,
       salesRepId,
+      trafferId,
     },
     include: leadInclude,
   });

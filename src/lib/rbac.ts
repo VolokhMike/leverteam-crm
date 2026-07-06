@@ -2,11 +2,13 @@ import { getServerSession } from "next-auth";
 import type { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 
+export type AppRole = "ADMIN" | "SALES" | "TRAFFER";
+
 export type SessionUser = {
   id: string;
   name?: string | null;
   username: string;
-  role: "ADMIN" | "SALES";
+  role: AppRole;
 };
 
 /** Returns the current authenticated user, or null. */
@@ -19,25 +21,32 @@ export function isAdmin(user: SessionUser | null): boolean {
   return user?.role === "ADMIN";
 }
 
+export function isTraffer(user: SessionUser | null): boolean {
+  return user?.role === "TRAFFER";
+}
+
 /**
  * Builds the `where` clause for querying leads, scoped by role.
- * Admins see everything; sales reps see leads assigned to them PLUS
- * unassigned leads (сырые «Холодные»), которые они могут «взять себе».
+ * - ADMIN   → видит всё.
+ * - SALES   → видит ТОЛЬКО закреплённых за ним лидов (личный кабинет).
+ * - TRAFFER → видит ТОЛЬКО приведённых им лидов (качество своего трафика).
  */
 export function leadScopeForUser(user: SessionUser): Prisma.LeadWhereInput {
   if (isAdmin(user)) return {};
-  return { OR: [{ salesRepId: user.id }, { salesRepId: null }] };
+  if (isTraffer(user)) return { trafferId: user.id };
+  return { salesRepId: user.id };
 }
 
 /**
  * Whether the user is allowed to read/mutate a specific lead.
- * Sales reps могут работать со своими лидами И с ещё не назначенными
- * (чтобы взять их в работу).
+ * - SALES   → только свои закреплённые лиды.
+ * - TRAFFER → только приведённые им (доступ read-only обеспечивается на уровне API).
  */
 export function canAccessLead(
   user: SessionUser,
-  lead: { salesRepId: string | null },
+  lead: { salesRepId: string | null; trafferId?: string | null },
 ): boolean {
   if (isAdmin(user)) return true;
-  return lead.salesRepId === user.id || lead.salesRepId === null;
+  if (isTraffer(user)) return lead.trafferId === user.id;
+  return lead.salesRepId === user.id;
 }

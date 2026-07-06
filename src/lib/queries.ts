@@ -14,6 +14,7 @@ export const leadInclude = {
   niche: true,
   stage: true,
   salesRep: { select: salesRepSelect },
+  traffer: { select: salesRepSelect },
 } satisfies Prisma.LeadInclude;
 
 export type LeadWithRelations = Prisma.LeadGetPayload<{

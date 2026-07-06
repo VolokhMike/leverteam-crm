@@ -4,6 +4,7 @@ import useSWR from "swr";
 import { X, Loader2, Mail, Send, Calendar } from "lucide-react";
 import { fetcher } from "@/lib/fetcher";
 import { Badge } from "@/components/Badge";
+import { roleLabel, ROLE_BADGE_COLORS } from "@/lib/constants";
 import type { EmployeeDetail } from "@/lib/types";
 
 type Props = {
@@ -52,8 +53,8 @@ export default function EmployeeProfileModal({ employeeId, onClose }: Props) {
                 <div className="text-lg font-bold">{data.name}</div>
                 <div className="flex items-center gap-2 text-sm text-slate-500">
                   <Badge
-                    label={data.role === "ADMIN" ? "Администратор" : "Продажник"}
-                    color={data.role === "ADMIN" ? "violet" : "sky"}
+                    label={roleLabel(data.role)}
+                    color={ROLE_BADGE_COLORS[data.role] ?? "slate"}
                   />
                   {!data.active && (
                     <Badge label="Деактивирован" color="rose" />

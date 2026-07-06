@@ -58,7 +58,7 @@ type ViewProps = {
   onEdit: (lead: Lead) => void;
   onTogglePin: (lead: Lead) => void;
   onMoveStage: (lead: Lead, stageKey: string) => void;
-  currentUser?: { id: string; role: "ADMIN" | "SALES" };
+  currentUser?: { id: string; role: "ADMIN" | "SALES" | "TRAFFER" };
   onTake?: (lead: Lead) => void;
   overlay?: boolean;
   isDragging?: boolean;
@@ -253,7 +253,7 @@ type Props = {
   onEdit: (lead: Lead) => void;
   onTogglePin: (lead: Lead) => void;
   onMoveStage: (lead: Lead, stageKey: string) => void;
-  currentUser?: { id: string; role: "ADMIN" | "SALES" };
+  currentUser?: { id: string; role: "ADMIN" | "SALES" | "TRAFFER" };
   onTake?: (lead: Lead) => void;
   overlay?: boolean;
 };

@@ -14,6 +14,7 @@ import {
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { Badge } from "@/components/Badge";
+import { roleLabel, ROLE_BADGE_COLORS } from "@/lib/constants";
 import EmployeeFormModal from "@/components/EmployeeFormModal";
 import EmployeeProfileModal from "@/components/EmployeeProfileModal";
 import { fetcher, mutateJson } from "@/lib/fetcher";
@@ -58,6 +59,7 @@ export default function EmployeesClient({ user }: Props) {
 
   const admins = employees.filter((e) => e.role === "ADMIN");
   const sales = employees.filter((e) => e.role === "SALES");
+  const traffers = employees.filter((e) => e.role === "TRAFFER");
 
   return (
     <>
@@ -70,7 +72,8 @@ export default function EmployeesClient({ user }: Props) {
           <div>
             <h1 className="text-2xl font-bold">Управление сотрудниками</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              {admins.length} админ(ов) · {sales.length} продажник(ов)
+              {admins.length} админ(ов) · {sales.length} продажник(ов) ·{" "}
+              {traffers.length} трафер(ов)
             </p>
           </div>
           <button
@@ -135,8 +138,8 @@ export default function EmployeesClient({ user }: Props) {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         <Badge
-                          label={emp.role === "ADMIN" ? "Админ" : "Продажник"}
-                          color={emp.role === "ADMIN" ? "violet" : "sky"}
+                          label={roleLabel(emp.role)}
+                          color={ROLE_BADGE_COLORS[emp.role] ?? "slate"}
                         />
                         {!emp.active &&
                           (emp.role === "ADMIN" ? (

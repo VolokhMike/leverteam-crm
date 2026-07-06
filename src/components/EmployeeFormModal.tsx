@@ -23,7 +23,7 @@ export default function EmployeeFormModal({
   const [username, setUsername] = useState("");
   const [telegram, setTelegram] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"ADMIN" | "SALES">("SALES");
+  const [role, setRole] = useState<"ADMIN" | "SALES" | "TRAFFER">("SALES");
   const [active, setActive] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -151,9 +151,12 @@ export default function EmployeeFormModal({
               <select
                 className={input}
                 value={role}
-                onChange={(e) => setRole(e.target.value as "ADMIN" | "SALES")}
+                onChange={(e) =>
+                  setRole(e.target.value as "ADMIN" | "SALES" | "TRAFFER")
+                }
               >
                 <option value="SALES">Продажник</option>
+                <option value="TRAFFER">Трафер</option>
                 <option value="ADMIN">Администратор</option>
               </select>
             </div>

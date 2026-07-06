@@ -15,7 +15,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { Loader2 } from "lucide-react";
+import { Loader2, Shuffle } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import Metrics from "@/components/Metrics";
@@ -33,7 +33,7 @@ import type {
 } from "@/lib/types";
 
 type Props = {
-  user: { id: string; name?: string | null; role: "ADMIN" | "SALES" };
+  user: { id: string; name?: string | null; role: "ADMIN" | "SALES" | "TRAFFER" };
 };
 
 function positionForIndex(list: Lead[], index: number): number {
@@ -55,6 +55,9 @@ export default function Board({ user }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   // Активная вкладка этапа в мобильном виде.
   const [mobileStageId, setMobileStageId] = useState<string | null>(null);
+  // Распределение нераспределённых лидов между продажниками.
+  const [distributing, setDistributing] = useState(false);
+  const [distributeMsg, setDistributeMsg] = useState<string | null>(null);
 
   // Минимальное представление текущего пользователя как продажника —
   // для оптимистичного отображения после «взятия в работу».
@@ -132,6 +135,29 @@ export default function Board({ user }: Props) {
   function refresh() {
     mutate();
     mutateMetrics();
+  }
+
+  // Админ: равномерно распределить нераспределённых лидов из «Новых».
+  async function onDistribute() {
+    setDistributing(true);
+    setDistributeMsg(null);
+    try {
+      const res = await mutateJson<{
+        distributed: number;
+        message?: string;
+      }>("/api/leads/distribute", "POST");
+      setDistributeMsg(
+        res.distributed > 0
+          ? `Распределено лидов: ${res.distributed}`
+          : res.message || "Нет нераспределённых лидов",
+      );
+      refresh();
+    } catch (err: any) {
+      setDistributeMsg(err.message || "Не удалось распределить");
+    } finally {
+      setDistributing(false);
+      setTimeout(() => setDistributeMsg(null), 4000);
+    }
   }
 
   // ─── Quick actions ────────────────────────────────────────
@@ -290,6 +316,28 @@ export default function Board({ user }: Props) {
       <Header user={user} center={<Metrics metrics={metrics} />} />
 
       <div className="border-b border-stone-200/80 bg-sand-50/60 px-4 py-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900 lg:px-6">
+        {isAdmin && (
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            <button
+              onClick={onDistribute}
+              disabled={distributing}
+              title="Равномерно распределить нераспределённых лидов из «Новых» между продажниками"
+              className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white shadow-card transition hover:bg-stone-800 disabled:opacity-60 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-100"
+            >
+              {distributing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Shuffle className="h-4 w-4" />
+              )}
+              Распределить лидов
+            </button>
+            {distributeMsg && (
+              <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                {distributeMsg}
+              </span>
+            )}
+          </div>
+        )}
         <Filters
           niches={niches}
           activeNiche={activeNiche}

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser, isAdmin, canAccessLead } from "@/lib/rbac";
+import { getSessionUser, isAdmin, isTraffer, canAccessLead } from "@/lib/rbac";
 import { leadInclude } from "@/lib/queries";
-import { COLD_STAGE } from "@/lib/constants";
 
 type Ctx = { params: { id: string } };
 
@@ -13,7 +12,7 @@ async function loadAndAuthorize(id: string) {
 
   const lead = await prisma.lead.findUnique({
     where: { id },
-    select: { id: true, salesRepId: true },
+    select: { id: true, salesRepId: true, trafferId: true },
   });
   if (!lead) return { error: NextResponse.json({ error: "Лид не найден" }, { status: 404 }) };
   if (!canAccessLead(user, lead)) {
@@ -39,6 +38,14 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   const auth = await loadAndAuthorize(params.id);
   if (auth.error) return auth.error;
   const { user } = auth;
+
+  // Трафер видит своих лидов, но не может их редактировать.
+  if (isTraffer(user!)) {
+    return NextResponse.json(
+      { error: "Трафер не может изменять лидов" },
+      { status: 403 },
+    );
+  }
 
   const body = await req.json().catch(() => ({}));
   const data: Prisma.LeadUpdateInput = {};
@@ -88,25 +95,6 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       : { disconnect: true };
   }
 
-  // «Взятие в работу»: продажник, работая с неназначенным лидом,
-  // автоматически закрепляет его за собой — когда перетаскивает карточку
-  // из «Холодных» в другую колонку или жмёт «Взять себе» (takeOwnership).
-  if (!isAdmin(user!) && auth.lead.salesRepId === null) {
-    let targetStageKey: string | null = body.stageKey ?? null;
-    if (!targetStageKey && body.stageId) {
-      const st = await prisma.stage.findUnique({
-        where: { id: body.stageId },
-        select: { key: true },
-      });
-      targetStageKey = st?.key ?? null;
-    }
-    const movingOutOfCold =
-      targetStageKey !== null && targetStageKey !== COLD_STAGE;
-    if (body.takeOwnership === true || movingOutOfCold) {
-      data.salesRep = { connect: { id: user!.id } };
-    }
-  }
-
   const lead = await prisma.lead.update({
     where: { id: params.id },
     data,
@@ -120,6 +108,13 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 export async function DELETE(_req: NextRequest, { params }: Ctx) {
   const auth = await loadAndAuthorize(params.id);
   if (auth.error) return auth.error;
+
+  if (isTraffer(auth.user!)) {
+    return NextResponse.json(
+      { error: "Трафер не может удалять лидов" },
+      { status: 403 },
+    );
+  }
 
   await prisma.lead.delete({ where: { id: params.id } });
   return NextResponse.json({ ok: true });
