@@ -21,18 +21,23 @@ export function isAdmin(user: SessionUser | null): boolean {
 
 /**
  * Builds the `where` clause for querying leads, scoped by role.
- * Admins see everything; sales reps see only leads assigned to them.
+ * Admins see everything; sales reps see leads assigned to them PLUS
+ * unassigned leads (сырые «Холодные»), которые они могут «взять себе».
  */
 export function leadScopeForUser(user: SessionUser): Prisma.LeadWhereInput {
   if (isAdmin(user)) return {};
-  return { salesRepId: user.id };
+  return { OR: [{ salesRepId: user.id }, { salesRepId: null }] };
 }
 
-/** Whether the user is allowed to read/mutate a specific lead. */
+/**
+ * Whether the user is allowed to read/mutate a specific lead.
+ * Sales reps могут работать со своими лидами И с ещё не назначенными
+ * (чтобы взять их в работу).
+ */
 export function canAccessLead(
   user: SessionUser,
   lead: { salesRepId: string | null },
 ): boolean {
   if (isAdmin(user)) return true;
-  return lead.salesRepId === user.id;
+  return lead.salesRepId === user.id || lead.salesRepId === null;
 }

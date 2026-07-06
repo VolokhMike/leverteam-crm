@@ -48,9 +48,20 @@ export default function Board({ user }: Props) {
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [activeNiche, setActiveNiche] = useState<string | null>(null);
+  const [onlyMine, setOnlyMine] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Lead | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Минимальное представление текущего пользователя как продажника —
+  // для оптимистичного отображения после «взятия в работу».
+  const meAsRep: SalesRep = {
+    id: user.id,
+    name: user.name ?? "Вы",
+    username: "",
+    telegram: null,
+    role: user.role,
+  };
 
   // Debounce the search input.
   useEffect(() => {
@@ -87,10 +98,14 @@ export default function Board({ user }: Props) {
   );
 
   // Group leads by stage, sorted (pinned first, then position).
+  // «Мои лиды» — клиентский фильтр: только карточки текущего продажника.
   const byStage = useMemo(() => {
+    const visible = onlyMine
+      ? leads.filter((l) => l.salesRepId === user.id)
+      : leads;
     const map = new Map<string, Lead[]>();
     for (const s of stages) map.set(s.id, []);
-    for (const l of leads) {
+    for (const l of visible) {
       if (!map.has(l.stageId)) map.set(l.stageId, []);
       map.get(l.stageId)!.push(l);
     }
@@ -101,7 +116,7 @@ export default function Board({ user }: Props) {
       });
     }
     return map;
-  }, [leads, stages]);
+  }, [leads, stages, onlyMine, user.id]);
 
   const activeLead = activeId ? leads.find((l) => l.id === activeId) : null;
 
@@ -120,6 +135,15 @@ export default function Board({ user }: Props) {
     }
   }
 
+  // Should this move also claim the lead for the current sales rep?
+  function shouldClaim(lead: Lead, targetKey: string) {
+    return (
+      user.role === "SALES" &&
+      lead.salesRepId === null &&
+      targetKey !== "cold"
+    );
+  }
+
   function onMoveStage(lead: Lead, stageKey: string) {
     const target = stages.find((s) => s.key === stageKey);
     if (!target || target.id === lead.stageId) return;
@@ -127,10 +151,47 @@ export default function Board({ user }: Props) {
       .filter((l) => l.stageId === target.id)
       .sort((a, b) => a.position - b.position);
     const position = positionForIndex(targetList, targetList.length);
+    const claim = shouldClaim(lead, stageKey);
     const next = leads.map((l) =>
-      l.id === lead.id ? { ...l, stageId: target.id, stage: target, position } : l,
+      l.id === lead.id
+        ? {
+            ...l,
+            stageId: target.id,
+            stage: target,
+            position,
+            ...(claim ? { salesRepId: user.id, salesRep: meAsRep } : {}),
+          }
+        : l,
     );
+    // Server auto-assigns when a rep moves an unassigned lead out of «Холодные».
     persist(lead.id, { stageId: target.id, position }, next);
+  }
+
+  // «Взять себе»: закрепить лида за собой и перенести в «Новые».
+  function onTake(lead: Lead) {
+    const target = stages.find((s) => s.key === "new");
+    if (!target) return;
+    const targetList = leads
+      .filter((l) => l.stageId === target.id)
+      .sort((a, b) => a.position - b.position);
+    const position = positionForIndex(targetList, targetList.length);
+    const next = leads.map((l) =>
+      l.id === lead.id
+        ? {
+            ...l,
+            stageId: target.id,
+            stage: target,
+            position,
+            salesRepId: user.id,
+            salesRep: meAsRep,
+          }
+        : l,
+    );
+    persist(
+      lead.id,
+      { stageKey: "new", position, takeOwnership: true },
+      next,
+    );
   }
 
   function onTogglePin(lead: Lead) {
@@ -183,9 +244,20 @@ export default function Board({ user }: Props) {
     if (targetStageId === dragged.stageId && position === dragged.position) return;
 
     const targetStage = stages.find((s) => s.id === targetStageId);
+    // Claim only on a real stage change out of «Холодные».
+    const claim =
+      targetStageId !== dragged.stageId &&
+      !!targetStage &&
+      shouldClaim(dragged, targetStage.key);
     const next = leads.map((l) =>
       l.id === dragged.id
-        ? { ...l, stageId: targetStageId!, stage: targetStage ?? l.stage, position }
+        ? {
+            ...l,
+            stageId: targetStageId!,
+            stage: targetStage ?? l.stage,
+            position,
+            ...(claim ? { salesRepId: user.id, salesRep: meAsRep } : {}),
+          }
         : l,
     );
     persist(dragged.id, { stageId: targetStageId, position }, next);
@@ -206,6 +278,8 @@ export default function Board({ user }: Props) {
           onNiche={setActiveNiche}
           search={search}
           onSearch={setSearch}
+          onlyMine={onlyMine}
+          onOnlyMine={setOnlyMine}
           canAdd
           onAdd={() => {
             setEditing(null);
@@ -239,6 +313,8 @@ export default function Board({ user }: Props) {
                   }}
                   onTogglePin={onTogglePin}
                   onMoveStage={onMoveStage}
+                  currentUser={{ id: user.id, role: user.role }}
+                  onTake={onTake}
                 />
               ))}
             </div>

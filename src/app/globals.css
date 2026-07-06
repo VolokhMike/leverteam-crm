@@ -15,7 +15,7 @@ body {
 }
 
 body {
-  @apply bg-slate-100 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  @apply bg-gray-100 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
 }
 
 /* Thin, subtle scrollbars for kanban columns / board */

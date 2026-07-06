@@ -79,7 +79,6 @@ model Lead {
   username        String? // username эксперта
   trafferName     String? // траффер — имя
   trafferUsername String? // траффер — @username
-  producerName    String? // продюсер — имя
   notes           String? // произвольные заметки
 
   pinned   Boolean @default(false) // закреплена ли карточка (булавка)

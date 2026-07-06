@@ -10,17 +10,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Leverteam accent — индиго (indigo-600 как основной).
         brand: {
-          50: "#eef4ff",
-          100: "#dbe6fe",
-          200: "#bfd3fe",
-          300: "#93b4fd",
-          400: "#608bfa",
-          500: "#3b64f6",
-          600: "#2544eb",
-          700: "#1d33d8",
-          800: "#1e2caf",
-          900: "#1e2b8a",
+          50: "#eef2ff",
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          300: "#a5b4fc",
+          400: "#818cf8",
+          500: "#6366f1",
+          600: "#4f46e5",
+          700: "#4338ca",
+          800: "#3730a3",
+          900: "#312e81",
+        },
+        // Графитовый фон сайдбара.
+        graphite: {
+          800: "#1e232b",
+          900: "#171a21",
+          950: "#0f1116",
         },
       },
       borderRadius: {
@@ -37,7 +44,7 @@ const config: Config = {
   safelist: [
     {
       pattern:
-        /(bg|text|border)-(slate|blue|indigo|violet|amber|emerald|rose|red|orange|pink|sky|fuchsia|cyan|green)-(100|200|300|400|500|600|700|800|900)/,
+        /(bg|text|border)-(slate|blue|indigo|violet|amber|emerald|rose|red|orange|pink|sky|fuchsia|cyan|green)-(50|100|200|300|400|500|600|700|800|900)/,
       variants: ["dark"],
     },
   ],

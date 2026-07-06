@@ -33,7 +33,6 @@ export type Lead = {
   username: string | null;
   trafferName: string | null;
   trafferUsername: string | null;
-  producerName: string | null;
   notes: string | null;
   pinned: boolean;
   position: number;

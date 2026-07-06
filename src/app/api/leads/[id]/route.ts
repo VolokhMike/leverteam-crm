@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isAdmin, canAccessLead } from "@/lib/rbac";
 import { leadInclude } from "@/lib/queries";
+import { COLD_STAGE } from "@/lib/constants";
 
 type Ctx = { params: { id: string } };
 
@@ -48,7 +49,6 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     "username",
     "trafferName",
     "trafferUsername",
-    "producerName",
     "notes",
   ] as const;
   for (const f of stringFields) {
@@ -86,6 +86,25 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     data.salesRep = body.salesRepId
       ? { connect: { id: body.salesRepId } }
       : { disconnect: true };
+  }
+
+  // «Взятие в работу»: продажник, работая с неназначенным лидом,
+  // автоматически закрепляет его за собой — когда перетаскивает карточку
+  // из «Холодных» в другую колонку или жмёт «Взять себе» (takeOwnership).
+  if (!isAdmin(user!) && auth.lead.salesRepId === null) {
+    let targetStageKey: string | null = body.stageKey ?? null;
+    if (!targetStageKey && body.stageId) {
+      const st = await prisma.stage.findUnique({
+        where: { id: body.stageId },
+        select: { key: true },
+      });
+      targetStageKey = st?.key ?? null;
+    }
+    const movingOutOfCold =
+      targetStageKey !== null && targetStageKey !== COLD_STAGE;
+    if (body.takeOwnership === true || movingOutOfCold) {
+      data.salesRep = { connect: { id: user!.id } };
+    }
   }
 
   const lead = await prisma.lead.update({

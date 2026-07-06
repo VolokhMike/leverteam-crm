@@ -25,7 +25,6 @@ export async function GET(req: NextRequest) {
       { telegramLink: { contains: search, mode: "insensitive" } },
       { trafferName: { contains: search, mode: "insensitive" } },
       { trafferUsername: { contains: search, mode: "insensitive" } },
-      { producerName: { contains: search, mode: "insensitive" } },
     ];
   }
 
@@ -87,7 +86,6 @@ export async function POST(req: NextRequest) {
       username: body.username || null,
       trafferName: body.trafferName || null,
       trafferUsername: body.trafferUsername || null,
-      producerName: body.producerName || null,
       notes: body.notes || null,
       pinned: Boolean(body.pinned),
       position,

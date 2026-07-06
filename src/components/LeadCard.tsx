@@ -11,7 +11,7 @@ import {
   Link2,
   Radio,
   UserCircle2,
-  Megaphone,
+  UserPlus,
   CalendarDays,
   RotateCcw,
 } from "lucide-react";
@@ -58,6 +58,8 @@ type ViewProps = {
   onEdit: (lead: Lead) => void;
   onTogglePin: (lead: Lead) => void;
   onMoveStage: (lead: Lead, stageKey: string) => void;
+  currentUser?: { id: string; role: "ADMIN" | "SALES" };
+  onTake?: (lead: Lead) => void;
   overlay?: boolean;
   isDragging?: boolean;
   innerRef?: (node: HTMLElement | null) => void;
@@ -72,6 +74,8 @@ export function LeadCardView({
   onEdit,
   onTogglePin,
   onMoveStage,
+  currentUser,
+  onTake,
   overlay = false,
   isDragging = false,
   innerRef,
@@ -86,6 +90,10 @@ export function LeadCardView({
   const next = idx >= 0 ? flow[idx + 1] : undefined;
   const prev = idx > 0 ? flow[idx - 1] : undefined;
 
+  // Продажник может «взять себе» ещё не назначенного лида.
+  const canTake =
+    !!onTake && currentUser?.role === "SALES" && lead.salesRepId === null;
+
   // Prevent drag from starting when interacting with controls.
   const stop = (e: React.PointerEvent) => e.stopPropagation();
 
@@ -94,10 +102,8 @@ export function LeadCardView({
       ref={innerRef}
       style={style}
       {...handleProps}
-      className={`group select-none rounded-xl border border-slate-200 bg-white p-3 shadow-card transition dark:border-slate-800 dark:bg-slate-900 ${
-        overlay
-          ? "dragging cursor-grabbing"
-          : "cursor-grab hover:shadow-card-hover"
+      className={`group select-none rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm transition dark:border-slate-800 dark:bg-slate-900 ${
+        overlay ? "dragging cursor-grabbing" : "cursor-grab hover:shadow-md"
       } ${isDragging ? "opacity-40" : ""} ${
         lead.pinned ? "ring-1 ring-brand-400/60" : ""
       }`}
@@ -168,20 +174,12 @@ export function LeadCardView({
         </Field>
         <Field icon={<UserCircle2 className="h-3.5 w-3.5" />} label="Продажник">
           {lead.salesRep ? (
-            <>
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
               {lead.salesRep.name}
-              {lead.salesRep.telegram ? (
-                <span className="ml-1 text-slate-400">
-                  {lead.salesRep.telegram}
-                </span>
-              ) : null}
-            </>
+            </span>
           ) : (
-            <span className="text-slate-400">не назначен</span>
+            <span className="italic text-slate-400">не назначен</span>
           )}
-        </Field>
-        <Field icon={<Megaphone className="h-3.5 w-3.5" />} label="Продюсер">
-          {lead.producerName || "—"}
         </Field>
         <Field icon={<CalendarDays className="h-3.5 w-3.5" />} label="Добавлен">
           {fmtDate(lead.createdAt)}
@@ -189,7 +187,18 @@ export function LeadCardView({
       </div>
 
       {/* Quick action buttons */}
-      <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-2.5 dark:border-slate-800">
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-2 dark:border-slate-800">
+        {canTake && (
+          <button
+            onPointerDown={stop}
+            onClick={() => onTake!(lead)}
+            title="Закрепить этого лида за собой и взять в работу"
+            className="inline-flex items-center gap-1 rounded-md bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-emerald-600"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            Взять себе
+          </button>
+        )}
         {isRejected ? (
           <button
             onPointerDown={stop}
@@ -244,6 +253,8 @@ type Props = {
   onEdit: (lead: Lead) => void;
   onTogglePin: (lead: Lead) => void;
   onMoveStage: (lead: Lead, stageKey: string) => void;
+  currentUser?: { id: string; role: "ADMIN" | "SALES" };
+  onTake?: (lead: Lead) => void;
   overlay?: boolean;
 };
 

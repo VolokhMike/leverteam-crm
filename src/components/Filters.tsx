@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X, Plus } from "lucide-react";
+import { Search, X, Plus, User } from "lucide-react";
 import { colorClasses } from "@/lib/constants";
 import type { Niche } from "@/lib/types";
 
@@ -10,6 +10,8 @@ type Props = {
   onNiche: (key: string | null) => void;
   search: string;
   onSearch: (v: string) => void;
+  onlyMine?: boolean;
+  onOnlyMine?: (v: boolean) => void;
   onAdd?: () => void;
   canAdd?: boolean;
 };
@@ -20,6 +22,8 @@ export default function Filters({
   onNiche,
   search,
   onSearch,
+  onlyMine = false,
+  onOnlyMine,
   onAdd,
   canAdd,
 }: Props) {
@@ -56,6 +60,22 @@ export default function Filters({
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
+        {onOnlyMine && (
+          <>
+            <button
+              onClick={() => onOnlyMine(!onlyMine)}
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                onlyMine
+                  ? "bg-emerald-500 text-white"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-800"
+              }`}
+            >
+              <User className="h-3.5 w-3.5" />
+              Мои лиды
+            </button>
+            <span className="mx-0.5 h-4 w-px bg-slate-200 dark:bg-slate-700" />
+          </>
+        )}
         <button
           onClick={() => onNiche(null)}
           className={`rounded-full px-3 py-1 text-xs font-medium transition ${

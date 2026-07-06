@@ -78,19 +78,31 @@ async function main() {
   const nicheBy = (k: string) => niches.find((n) => n.key === k)!;
   const stageBy = (k: string) => stages.find((s) => s.key === k)!;
 
-  const demo = [
-    { title: "РКО для бизнеса", username: "rko_bank", stage: "new", niche: "rko", rep: 0, traffer: "Петя", trafferU: "@petya_t", producer: "Роман", pinned: true },
-    { title: "Расчётный счёт под ключ", username: "rko_fast", stage: "first_touch", niche: "rko", rep: 0, traffer: "Дима", trafferU: "@dima_t", producer: "Роман" },
-    { title: "Эквайринг для магазинов", username: "rko_pay", stage: "call_queue", niche: "rko", rep: 1, traffer: "Оля", trafferU: "@olya_t", producer: "Мария" },
-    { title: "Нейро-художник", username: "ai_artist", stage: "qualified", niche: "neuro", rep: 1, traffer: "Костя", trafferU: "@kostya_t", producer: "Мария" },
-    { title: "Автоматизация на нейросетях", username: "ai_automation", stage: "producer", niche: "neuro", rep: 0, traffer: "Саша", trafferU: "@sasha_t", producer: "Роман" },
-    { title: "Промпт-инженер", username: "prompt_pro", stage: "bought", niche: "neuro", rep: 1, traffer: "Ника", trafferU: "@nika_t", producer: "Роман" },
-    { title: "Обучение профессиям", username: "prof_school", stage: "rejected", niche: "professions", rep: 0, traffer: "Ваня", trafferU: "@vanya_t", producer: "Мария" },
-    { title: "Профессия аналитик данных", username: "prof_data", stage: "new", niche: "professions", rep: 1, traffer: "Лена", trafferU: "@lena_t", producer: "Роман" },
-    { title: "Курс по копирайтингу", username: "prof_copy", stage: "first_touch", niche: "professions", rep: 0, traffer: "Гриша", trafferU: "@grisha_t", producer: "Мария" },
-    { title: "Нейросети для маркетинга", username: "ai_marketing", stage: "qualified", niche: "neuro", rep: 1, traffer: "Аня", trafferU: "@anya_t", producer: "Роман" },
-    { title: "РКО для самозанятых", username: "rko_self", stage: "call_queue", niche: "rko", rep: 0, traffer: "Женя", trafferU: "@zhenya_t", producer: "Мария" },
-    { title: "Профессия SMM-специалист", username: "prof_smm", stage: "new", niche: "professions", rep: 1, traffer: "Соня", trafferU: "@sonya_t", producer: "Роман" },
+  // rep: 0 = Алексей, 1 = Мария, null = не назначен (сырой лид в «Холодных»).
+  const demo: Array<{
+    title: string;
+    username: string;
+    stage: string;
+    niche: string;
+    rep: number | null;
+    traffer: string;
+    trafferU: string;
+    pinned?: boolean;
+  }> = [
+    // ── Холодные (сырые лиды от траферов, без продажника) ──
+    { title: "РКО холодный №1", username: "rko_cold1", stage: "cold", niche: "rko", rep: null, traffer: "Петя", trafferU: "@petya_t" },
+    { title: "Нейросети холодный", username: "ai_cold", stage: "cold", niche: "neuro", rep: null, traffer: "Дима", trafferU: "@dima_t" },
+    { title: "Профессии холодный", username: "prof_cold", stage: "cold", niche: "professions", rep: null, traffer: "Оля", trafferU: "@olya_t" },
+    { title: "РКО холодный №2", username: "rko_cold2", stage: "cold", niche: "rko", rep: null, traffer: "Костя", trafferU: "@kostya_t" },
+    // ── В работе у продажников ──
+    { title: "Расчётный счёт под ключ", username: "rko_fast", stage: "first_touch", niche: "rko", rep: 0, traffer: "Дима", trafferU: "@dima_t", pinned: true },
+    { title: "Эквайринг для магазинов", username: "rko_pay", stage: "call_queue", niche: "rko", rep: 1, traffer: "Оля", trafferU: "@olya_t" },
+    { title: "Нейро-художник", username: "ai_artist", stage: "qualified", niche: "neuro", rep: 1, traffer: "Костя", trafferU: "@kostya_t" },
+    { title: "Автоматизация на нейросетях", username: "ai_automation", stage: "producer", niche: "neuro", rep: 0, traffer: "Саша", trafferU: "@sasha_t" },
+    { title: "Промпт-инженер", username: "prompt_pro", stage: "bought", niche: "neuro", rep: 1, traffer: "Ника", trafferU: "@nika_t" },
+    { title: "Обучение профессиям", username: "prof_school", stage: "rejected", niche: "professions", rep: 0, traffer: "Ваня", trafferU: "@vanya_t" },
+    { title: "Профессия аналитик данных", username: "prof_data", stage: "new", niche: "professions", rep: 1, traffer: "Лена", trafferU: "@lena_t" },
+    { title: "РКО для самозанятых", username: "rko_self", stage: "call_queue", niche: "rko", rep: 0, traffer: "Женя", trafferU: "@zhenya_t" },
   ];
 
   // Clean previous demo leads to keep seed idempotent-ish.
@@ -105,12 +117,11 @@ async function main() {
         telegramLink: `https://t.me/${d.username}`,
         trafferName: d.traffer,
         trafferUsername: d.trafferU,
-        producerName: d.producer,
         pinned: d.pinned ?? false,
         position: (pos += 1000),
         nicheId: nicheBy(d.niche).id,
         stageId: stageBy(d.stage).id,
-        salesRepId: sales[d.rep].id,
+        salesRepId: d.rep === null ? null : sales[d.rep].id,
       },
     });
   }

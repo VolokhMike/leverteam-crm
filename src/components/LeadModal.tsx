@@ -25,7 +25,6 @@ const empty = {
   salesRepId: "",
   trafferName: "",
   trafferUsername: "",
-  producerName: "",
   notes: "",
   pinned: false,
 };
@@ -57,7 +56,6 @@ export default function LeadModal({
         salesRepId: lead.salesRepId ?? "",
         trafferName: lead.trafferName ?? "",
         trafferUsername: lead.trafferUsername ?? "",
-        producerName: lead.producerName ?? "",
         notes: lead.notes ?? "",
         pinned: lead.pinned ?? false,
       });
@@ -91,7 +89,6 @@ export default function LeadModal({
         stageId: form.stageId,
         trafferName: form.trafferName.trim(),
         trafferUsername: form.trafferUsername.trim(),
-        producerName: form.producerName.trim(),
         notes: form.notes.trim(),
         pinned: form.pinned,
         ...(isAdmin ? { salesRepId: form.salesRepId || null } : {}),
@@ -251,15 +248,6 @@ export default function LeadModal({
                 placeholder="@username"
               />
             </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>Продюсер</label>
-            <input
-              className={input}
-              value={form.producerName}
-              onChange={(e) => set("producerName", e.target.value)}
-            />
           </div>
 
           <div>

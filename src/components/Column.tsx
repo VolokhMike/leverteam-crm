@@ -16,6 +16,8 @@ type Props = {
   onEdit: (lead: Lead) => void;
   onTogglePin: (lead: Lead) => void;
   onMoveStage: (lead: Lead, stageKey: string) => void;
+  currentUser?: { id: string; role: "ADMIN" | "SALES" };
+  onTake?: (lead: Lead) => void;
 };
 
 export default function Column({
@@ -25,6 +27,8 @@ export default function Column({
   onEdit,
   onTogglePin,
   onMoveStage,
+  currentUser,
+  onTake,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({
     id: stage.id,
@@ -33,7 +37,7 @@ export default function Column({
   const c = colorClasses(stage.color);
 
   return (
-    <div className="flex w-[300px] shrink-0 flex-col">
+    <div className="flex w-[272px] shrink-0 flex-col">
       {/* Column header */}
       <div className="mb-2 flex items-center gap-2 px-1">
         <span className={`h-2.5 w-2.5 rounded-full ${c.dot}`} />
@@ -46,10 +50,10 @@ export default function Column({
       {/* Droppable body */}
       <div
         ref={setNodeRef}
-        className={`scrollbar-thin flex max-h-[calc(100vh-230px)] flex-1 flex-col gap-2 overflow-y-auto rounded-xl border border-dashed p-2 transition ${
+        className={`scrollbar-thin flex max-h-[calc(100vh-210px)] flex-1 flex-col gap-2 overflow-y-auto rounded-lg border border-dashed p-1.5 transition ${
           isOver
             ? "border-brand-400 bg-brand-50/50 dark:border-brand-500 dark:bg-brand-600/10"
-            : "border-slate-200 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-900/40"
+            : "border-slate-200 bg-slate-100/60 dark:border-slate-800 dark:bg-slate-900/40"
         }`}
       >
         <SortableContext
@@ -64,6 +68,8 @@ export default function Column({
               onEdit={onEdit}
               onTogglePin={onTogglePin}
               onMoveStage={onMoveStage}
+              currentUser={currentUser}
+              onTake={onTake}
             />
           ))}
         </SortableContext>
