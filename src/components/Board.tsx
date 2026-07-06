@@ -8,6 +8,7 @@ import {
   DragStartEvent,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   KeyboardSensor,
   closestCorners,
   useSensor,
@@ -91,7 +92,13 @@ export default function Board({ user }: Props) {
   } = useSWR<Lead[]>(leadsKey, fetcher);
 
   const sensors = useSensors(
+    // Мышь/тачпад: тащим сразу после сдвига на 6px.
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    // Тач-экраны: перетаскивание стартует только после долгого нажатия (250мс).
+    // Обычный свайп при этом скроллит доску/колонку, а не хватает карточку.
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 8 },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),

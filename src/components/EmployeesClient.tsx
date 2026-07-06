@@ -66,7 +66,7 @@ export default function EmployeesClient({ user }: Props) {
       <Header user={user} />
 
       <main className="mx-auto max-w-5xl px-4 py-6 lg:px-6">
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Управление сотрудниками</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -78,7 +78,7 @@ export default function EmployeesClient({ user }: Props) {
               setEditing(null);
               setFormOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
           >
             <UserPlus className="h-4 w-4" />
             Добавить сотрудника
@@ -90,8 +90,8 @@ export default function EmployeesClient({ user }: Props) {
             <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Загрузка…
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+            <table className="w-full min-w-[480px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800">
                   <th className="px-4 py-3 font-medium">Сотрудник</th>
