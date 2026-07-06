@@ -18,6 +18,10 @@ type Props = {
   onMoveStage: (lead: Lead, stageKey: string) => void;
   currentUser?: { id: string; role: "ADMIN" | "SALES" };
   onTake?: (lead: Lead) => void;
+  /** Растянуть колонку на всю ширину (мобильный вид с вкладками). */
+  fluid?: boolean;
+  /** Скрыть заголовок колонки (на мобилке его заменяют вкладки). */
+  hideHeader?: boolean;
 };
 
 export default function Column({
@@ -29,6 +33,8 @@ export default function Column({
   onMoveStage,
   currentUser,
   onTake,
+  fluid = false,
+  hideHeader = false,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({
     id: stage.id,
@@ -37,23 +43,35 @@ export default function Column({
   const c = colorClasses(stage.color);
 
   return (
-    <div className="flex w-[272px] shrink-0 flex-col">
+    <div
+      className={`flex flex-col ${
+        fluid ? "w-full" : "w-[288px] shrink-0"
+      }`}
+    >
       {/* Column header */}
-      <div className="mb-2 flex items-center gap-2 px-1">
-        <span className={`h-2.5 w-2.5 rounded-full ${c.dot}`} />
-        <h3 className="text-sm font-semibold">{stage.name}</h3>
-        <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-          {leads.length}
-        </span>
-      </div>
+      {!hideHeader && (
+        <div className="mb-2.5 flex items-center gap-2 px-1">
+          <span className={`h-2.5 w-2.5 rounded-full ${c.dot}`} />
+          <h3 className="text-sm font-bold text-stone-800 dark:text-slate-100">
+            {stage.name}
+          </h3>
+          <span className="rounded-full bg-stone-200/80 px-2 py-0.5 text-xs font-semibold tabular-nums text-stone-600 dark:bg-slate-800 dark:text-slate-300">
+            {leads.length}
+          </span>
+        </div>
+      )}
 
       {/* Droppable body */}
       <div
         ref={setNodeRef}
-        className={`scrollbar-thin flex max-h-[calc(100vh-210px)] flex-1 flex-col gap-2 overflow-y-auto rounded-lg border border-dashed p-1.5 transition ${
+        className={`scrollbar-thin flex flex-1 flex-col gap-2 overflow-y-auto rounded-2xl p-2 transition ${
+          fluid
+            ? "max-h-[calc(100dvh-232px)]"
+            : "max-h-[calc(100vh-210px)]"
+        } ${
           isOver
-            ? "border-brand-400 bg-brand-50/50 dark:border-brand-500 dark:bg-brand-600/10"
-            : "border-slate-200 bg-slate-100/60 dark:border-slate-800 dark:bg-slate-900/40"
+            ? "bg-brand-50 ring-2 ring-inset ring-brand-300 dark:bg-brand-600/10 dark:ring-brand-500/40"
+            : "bg-stone-100/70 dark:bg-slate-900/40"
         }`}
       >
         <SortableContext

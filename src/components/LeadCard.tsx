@@ -102,10 +102,10 @@ export function LeadCardView({
       ref={innerRef}
       style={style}
       {...handleProps}
-      className={`group select-none rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm transition dark:border-slate-800 dark:bg-slate-900 ${
-        overlay ? "dragging cursor-grabbing" : "cursor-grab hover:shadow-md"
+      className={`group select-none rounded-2xl border border-stone-200/70 bg-white p-3 shadow-card transition dark:border-slate-800 dark:bg-slate-900 ${
+        overlay ? "dragging cursor-grabbing" : "cursor-grab hover:shadow-card-hover"
       } ${isDragging ? "opacity-40" : ""} ${
-        lead.pinned ? "ring-1 ring-brand-400/60" : ""
+        lead.pinned ? "ring-2 ring-brand-300" : ""
       }`}
     >
       {/* Header: title + quick action icons */}

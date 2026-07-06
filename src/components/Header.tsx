@@ -18,7 +18,7 @@ export default function Header({ user, center }: Props) {
   const isAdmin = user.role === "ADMIN";
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
+    <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-sand-50/80 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/90">
       <div className="flex flex-wrap items-center gap-4 px-4 py-3 lg:px-6">
         {/* Center: metrics */}
         {center && (
@@ -45,7 +45,7 @@ export default function Header({ user, center }: Props) {
             type="button"
             onClick={() => signOut({ callbackUrl: "/login" })}
             title="Выйти"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 text-sm font-medium text-stone-600 transition hover:bg-stone-50 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline">Выйти</span>

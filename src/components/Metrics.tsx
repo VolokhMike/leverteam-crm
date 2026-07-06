@@ -43,7 +43,7 @@ export default function Metrics({ metrics }: { metrics?: MetricsType }) {
         return (
           <div
             key={c.key}
-            className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:min-w-[150px]"
+            className="flex items-center gap-2.5 rounded-2xl border border-stone-200/70 bg-white px-3 py-2 shadow-card dark:border-slate-800 dark:bg-slate-900 lg:min-w-[150px]"
           >
             <span
               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${c.ring}`}

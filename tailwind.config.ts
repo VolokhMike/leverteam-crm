@@ -10,20 +10,27 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Leverteam accent — индиго (indigo-600 как основной).
+        // Leverteam accent — тёплый коралл (coral/orange).
         brand: {
-          50: "#eef2ff",
-          100: "#e0e7ff",
-          200: "#c7d2fe",
-          300: "#a5b4fc",
-          400: "#818cf8",
-          500: "#6366f1",
-          600: "#4f46e5",
-          700: "#4338ca",
-          800: "#3730a3",
-          900: "#312e81",
+          50: "#fff6f3",
+          100: "#ffe9e1",
+          200: "#ffd0c0",
+          300: "#ffae94",
+          400: "#ff8564",
+          500: "#ff6240",
+          600: "#ed4924",
+          700: "#c53a1b",
+          800: "#a1321a",
+          900: "#842e1b",
         },
-        // Графитовый фон сайдбара.
+        // Тёплые нейтральные тона (песочный «холст» интерфейса).
+        sand: {
+          50: "#faf7f5",
+          100: "#f4efeb",
+          200: "#eae2db",
+          300: "#d9ccc1",
+        },
+        // Графитовый — оставлен для тёмной темы.
         graphite: {
           800: "#1e232b",
           900: "#171a21",
@@ -31,12 +38,19 @@ const config: Config = {
         },
       },
       borderRadius: {
-        xl: "0.9rem",
-        "2xl": "1.25rem",
+        xl: "1rem",
+        "2xl": "1.5rem",
+        "3xl": "1.75rem",
       },
       boxShadow: {
-        card: "0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)",
-        "card-hover": "0 8px 24px -6px rgb(0 0 0 / 0.12)",
+        // Мягкие, тёплые тени для «воздушного» минимала.
+        card: "0 1px 2px rgb(24 16 12 / 0.04), 0 4px 16px -6px rgb(24 16 12 / 0.08)",
+        "card-hover": "0 10px 34px -10px rgb(237 73 36 / 0.18)",
+      },
+      fontSize: {
+        // Чуть крупнее базовая типографика.
+        "2xl": ["1.6rem", { lineHeight: "1.2", letterSpacing: "-0.02em" }],
+        "3xl": ["2rem", { lineHeight: "1.15", letterSpacing: "-0.025em" }],
       },
     },
   },

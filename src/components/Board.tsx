@@ -53,6 +53,8 @@ export default function Board({ user }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Lead | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  // Активная вкладка этапа в мобильном виде.
+  const [mobileStageId, setMobileStageId] = useState<string | null>(null);
 
   // Минимальное представление текущего пользователя как продажника —
   // для оптимистичного отображения после «взятия в работу».
@@ -272,13 +274,22 @@ export default function Board({ user }: Props) {
 
   const orderedStages = [...stages].sort((a, b) => a.order - b.order);
 
+  // Валидная активная вкладка для мобильного вида (fallback — первый этап).
+  const currentMobileStageId =
+    mobileStageId && orderedStages.some((s) => s.id === mobileStageId)
+      ? mobileStageId
+      : orderedStages[0]?.id ?? null;
+  const currentMobileStage = orderedStages.find(
+    (s) => s.id === currentMobileStageId,
+  );
+
   return (
     <>
       <Sidebar user={user} />
       <div className="flex min-h-screen flex-col pl-16 md:pl-60">
       <Header user={user} center={<Metrics metrics={metrics} />} />
 
-      <div className="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 lg:px-6">
+      <div className="border-b border-stone-200/80 bg-sand-50/60 px-4 py-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900 lg:px-6">
         <Filters
           niches={niches}
           activeNiche={activeNiche}
@@ -307,7 +318,62 @@ export default function Board({ user }: Props) {
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
           >
-            <div className="scrollbar-thin flex gap-4 overflow-x-auto pb-3">
+            {/* Мобильные вкладки этапов — видны только на телефоне */}
+            <div className="mb-3 md:hidden">
+              <div className="scrollbar-thin -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+                {orderedStages.map((stage) => {
+                  const active = stage.id === currentMobileStageId;
+                  const count = (byStage.get(stage.id) ?? []).length;
+                  return (
+                    <button
+                      key={stage.id}
+                      onClick={() => setMobileStageId(stage.id)}
+                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition ${
+                        active
+                          ? "bg-brand-600 text-white shadow-card"
+                          : "bg-white text-stone-600 ring-1 ring-stone-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700"
+                      }`}
+                    >
+                      {stage.name}
+                      <span
+                        className={`rounded-full px-1.5 py-0.5 text-xs tabular-nums ${
+                          active
+                            ? "bg-white/25"
+                            : "bg-stone-100 dark:bg-slate-800"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Мобильный вид — одна колонка на весь экран */}
+            <div className="md:hidden">
+              {currentMobileStage && (
+                <Column
+                  key={currentMobileStage.id}
+                  stage={currentMobileStage}
+                  leads={byStage.get(currentMobileStage.id) ?? []}
+                  stages={orderedStages}
+                  onEdit={(l) => {
+                    setEditing(l);
+                    setModalOpen(true);
+                  }}
+                  onTogglePin={onTogglePin}
+                  onMoveStage={onMoveStage}
+                  currentUser={{ id: user.id, role: user.role }}
+                  onTake={onTake}
+                  fluid
+                  hideHeader
+                />
+              )}
+            </div>
+
+            {/* Десктоп — все колонки в ряд с горизонтальным скроллом */}
+            <div className="scrollbar-thin hidden gap-4 overflow-x-auto pb-3 md:flex">
               {orderedStages.map((stage) => (
                 <Column
                   key={stage.id}

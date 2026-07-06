@@ -36,7 +36,7 @@ export default function Filters({
             value={search}
             onChange={(e) => onSearch(e.target.value)}
             placeholder="Найти эксперта на доске…"
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-9 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 dark:border-slate-700 dark:bg-slate-900"
+            className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-9 pr-9 text-sm outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-500/15 dark:border-slate-700 dark:bg-slate-900"
           />
           {search && (
             <button
@@ -51,7 +51,7 @@ export default function Filters({
         {canAdd && (
           <button
             onClick={onAdd}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-card transition hover:bg-brand-700 hover:shadow-card-hover"
           >
             <Plus className="h-4 w-4" />
             Добавить лида
