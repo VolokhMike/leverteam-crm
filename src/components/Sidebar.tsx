@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { KanbanSquare, Shield } from "lucide-react";
+import { KanbanSquare, Shield, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -55,6 +55,12 @@ export default function Sidebar({ user }: Props) {
             "/admin/employees",
             "Меню админа",
             <Shield className="h-5 w-5" />,
+          )}
+        {isAdmin &&
+          navItem(
+            "/admin/settings",
+            "Настройки",
+            <Settings className="h-5 w-5" />,
           )}
       </nav>
 

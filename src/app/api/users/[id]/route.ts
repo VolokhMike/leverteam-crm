@@ -46,6 +46,25 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
   if ("telegram" in body) data.telegram = body.telegram?.trim() || null;
   if (body.role === "ADMIN" || body.role === "SALES") data.role = body.role as Role;
+
+  // Смена логина: проверяем длину и уникальность (исключая самого пользователя).
+  if (typeof body.username === "string" && body.username.trim()) {
+    const username = body.username.trim();
+    if (username.length < 3) {
+      return NextResponse.json(
+        { error: "Логин слишком короткий (минимум 3 символа)" },
+        { status: 400 },
+      );
+    }
+    const taken = await prisma.user.findFirst({
+      where: { username, id: { not: params.id } },
+      select: { id: true },
+    });
+    if (taken) {
+      return NextResponse.json({ error: "Логин уже занят" }, { status: 409 });
+    }
+    data.username = username;
+  }
   if ("active" in body) data.active = Boolean(body.active);
   if (body.password) {
     if (String(body.password).length < 4) {
