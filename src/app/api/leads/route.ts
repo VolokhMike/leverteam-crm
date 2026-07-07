@@ -9,9 +9,10 @@ import {
 } from "@/lib/rbac";
 import { leadInclude } from "@/lib/queries";
 import { NEW_STAGE } from "@/lib/constants";
+import { apiHandler } from "@/lib/api";
 
 // GET /api/leads?search=&niche=&stage=
-export async function GET(req: NextRequest) {
+export const GET = apiHandler(async (req: NextRequest) => {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -41,10 +42,10 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json(leads);
-}
+});
 
 // POST /api/leads
-export async function POST(req: NextRequest) {
+export const POST = apiHandler(async (req: NextRequest) => {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -126,4 +127,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(lead, { status: 201 });
-}
+});

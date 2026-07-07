@@ -3,10 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser, isAdmin } from "@/lib/rbac";
 import { trafferStatsFrom, salesStatsFrom } from "@/lib/stats";
 import type { TeamMember } from "@/lib/types";
+import { apiHandler } from "@/lib/api";
 
 // GET /api/team — списки траферов и продажников с агрегированной статистикой.
 // Только для администратора.
-export async function GET() {
+export const GET = apiHandler(async () => {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAdmin(user)) {
@@ -92,4 +93,4 @@ export async function GET() {
     traffers: members.filter((m) => m.role === "TRAFFER"),
     sales: members.filter((m) => m.role === "SALES"),
   });
-}
+});

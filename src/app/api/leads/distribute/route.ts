@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isAdmin } from "@/lib/rbac";
 import { NEW_STAGE } from "@/lib/constants";
+import { apiHandler } from "@/lib/api";
 
 // POST /api/leads/distribute
 // Равномерно (Round-Robin) распределяет всех нераспределённых лидов из колонки
 // «Новые» между активными продажниками. Только для администратора.
-export async function POST() {
+export const POST = apiHandler(async () => {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAdmin(user)) {
@@ -72,4 +73,4 @@ export async function POST() {
       count: perRep.get(r.id) ?? 0,
     })),
   });
-}
+});

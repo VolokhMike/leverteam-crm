@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isAdmin, isTraffer, canAccessLead } from "@/lib/rbac";
 import { leadInclude } from "@/lib/queries";
+import { apiHandler } from "@/lib/api";
 
 type Ctx = { params: { id: string } };
 
@@ -22,7 +23,7 @@ async function loadAndAuthorize(id: string) {
 }
 
 // GET /api/leads/:id
-export async function GET(_req: NextRequest, { params }: Ctx) {
+export const GET = apiHandler(async (_req: NextRequest, { params }: Ctx) => {
   const auth = await loadAndAuthorize(params.id);
   if (auth.error) return auth.error;
 
@@ -31,10 +32,10 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
     include: leadInclude,
   });
   return NextResponse.json(lead);
-}
+});
 
 // PATCH /api/leads/:id  — update fields, move stage, pin, reassign
-export async function PATCH(req: NextRequest, { params }: Ctx) {
+export const PATCH = apiHandler(async (req: NextRequest, { params }: Ctx) => {
   const auth = await loadAndAuthorize(params.id);
   if (auth.error) return auth.error;
   const { user } = auth;
@@ -102,10 +103,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   });
 
   return NextResponse.json(lead);
-}
+});
 
 // DELETE /api/leads/:id
-export async function DELETE(_req: NextRequest, { params }: Ctx) {
+export const DELETE = apiHandler(async (_req: NextRequest, { params }: Ctx) => {
   const auth = await loadAndAuthorize(params.id);
   if (auth.error) return auth.error;
 
@@ -118,4 +119,4 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
 
   await prisma.lead.delete({ where: { id: params.id } });
   return NextResponse.json({ ok: true });
-}
+});

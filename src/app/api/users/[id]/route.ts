@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isAdmin } from "@/lib/rbac";
 import { userPublicSelect, leadInclude } from "@/lib/queries";
+import { apiHandler } from "@/lib/api";
 
 type Ctx = { params: { id: string } };
 
@@ -15,7 +16,7 @@ async function requireAdmin() {
 }
 
 // GET /api/users/:id — profile + assigned leads (admin only)
-export async function GET(_req: NextRequest, { params }: Ctx) {
+export const GET = apiHandler(async (_req: NextRequest, { params }: Ctx) => {
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
 
@@ -32,10 +33,10 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   });
 
   return NextResponse.json({ ...profile, leads });
-}
+});
 
 // PATCH /api/users/:id — update name/telegram/role/active/password (admin only)
-export async function PATCH(req: NextRequest, { params }: Ctx) {
+export const PATCH = apiHandler(async (req: NextRequest, { params }: Ctx) => {
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
   const { user } = auth;
@@ -87,10 +88,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     select: userPublicSelect,
   });
   return NextResponse.json(updated);
-}
+});
 
 // DELETE /api/users/:id — remove employee (admin only)
-export async function DELETE(_req: NextRequest, { params }: Ctx) {
+export const DELETE = apiHandler(async (_req: NextRequest, { params }: Ctx) => {
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
   const { user } = auth;
@@ -119,4 +120,4 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
   // Leads keep existing; their salesRepId is set NULL (onDelete: SetNull).
   await prisma.user.delete({ where: { id: params.id } });
   return NextResponse.json({ ok: true });
-}
+});

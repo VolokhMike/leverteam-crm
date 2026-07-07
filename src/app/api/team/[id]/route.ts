@@ -4,12 +4,13 @@ import { getSessionUser, isAdmin } from "@/lib/rbac";
 import { leadInclude } from "@/lib/queries";
 import { trafferStatsFrom, salesStatsFrom } from "@/lib/stats";
 import type { TeamMemberDetail } from "@/lib/types";
+import { apiHandler } from "@/lib/api";
 
 type Ctx = { params: { id: string } };
 
 // GET /api/team/:id — профиль сотрудника с индивидуальной статистикой.
 // Только для администратора.
-export async function GET(_req: NextRequest, { params }: Ctx) {
+export const GET = apiHandler(async (_req: NextRequest, { params }: Ctx) => {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAdmin(user)) {
@@ -75,4 +76,4 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   detail._count.leads = Object.values(byStage).reduce((a, b) => a + b, 0);
 
   return NextResponse.json(detail);
-}
+});

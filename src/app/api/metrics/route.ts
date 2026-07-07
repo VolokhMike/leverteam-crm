@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, leadScopeForUser } from "@/lib/rbac";
+import { apiHandler } from "@/lib/api";
 
 // GET /api/metrics — headline counters + per-stage breakdown (role-scoped)
-export async function GET() {
+export const GET = apiHandler(async () => {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -30,4 +31,4 @@ export async function GET() {
     bought: byStage["bought"] ?? 0,       // Купили
     byStage,
   });
-}
+});

@@ -4,9 +4,10 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isAdmin } from "@/lib/rbac";
 import { userPublicSelect } from "@/lib/queries";
+import { apiHandler } from "@/lib/api";
 
 // GET /api/users?role=SALES  — admin only
-export async function GET(req: NextRequest) {
+export const GET = apiHandler(async (req: NextRequest) => {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAdmin(user)) return NextResponse.json({ error: "Доступ запрещён" }, { status: 403 });
@@ -21,10 +22,10 @@ export async function GET(req: NextRequest) {
     orderBy: [{ role: "asc" }, { createdAt: "asc" }],
   });
   return NextResponse.json(users);
-}
+});
 
 // POST /api/users  — create employee (admin only)
-export async function POST(req: NextRequest) {
+export const POST = apiHandler(async (req: NextRequest) => {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAdmin(user)) return NextResponse.json({ error: "Доступ запрещён" }, { status: 403 });
@@ -62,4 +63,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(created, { status: 201 });
-}
+});
