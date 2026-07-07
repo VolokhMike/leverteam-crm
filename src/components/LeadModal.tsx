@@ -72,19 +72,31 @@ export default function LeadModal({
   const set = (k: keyof typeof form, v: string | boolean) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  // Достаёт хэндл (@username) из ссылки Telegram: https://t.me/john → john
+  function handleFromLink(link: string): string {
+    const m = link.trim().match(/t\.me\/(@?[A-Za-z0-9_]+)/i);
+    return m ? m[1].replace(/^@/, "") : "";
+  }
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.title.trim()) {
-      setError("Укажите заголовок");
+    const link = form.telegramLink.trim();
+    const handle = handleFromLink(link);
+    // Заголовок и username больше не редактируются вручную — выводим их
+    // автоматически. При редактировании сохраняем прежний заголовок.
+    const title = form.title.trim() || (handle ? `@${handle}` : link);
+    const username = form.username.trim() || handle;
+    if (!title) {
+      setError("Укажите ссылку Telegram");
       return;
     }
     setSaving(true);
     setError("");
     try {
       const payload = {
-        title: form.title.trim(),
-        telegramLink: form.telegramLink.trim(),
-        username: form.username.trim(),
+        title,
+        telegramLink: link,
+        username,
         nicheId: form.nicheId || null,
         stageId: form.stageId,
         trafferName: form.trafferName.trim(),
@@ -149,35 +161,14 @@ export default function LeadModal({
 
         <form onSubmit={save} className="space-y-3">
           <div>
-            <label className={labelCls}>Заголовок *</label>
+            <label className={labelCls}>Ссылка Telegram</label>
             <input
               className={input}
-              value={form.title}
-              onChange={(e) => set("title", e.target.value)}
-              placeholder="Имя / ник эксперта"
+              value={form.telegramLink}
+              onChange={(e) => set("telegramLink", e.target.value)}
+              placeholder="https://t.me/username"
               autoFocus
             />
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className={labelCls}>Ссылка Telegram</label>
-              <input
-                className={input}
-                value={form.telegramLink}
-                onChange={(e) => set("telegramLink", e.target.value)}
-                placeholder="https://t.me/username"
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Username</label>
-              <input
-                className={input}
-                value={form.username}
-                onChange={(e) => set("username", e.target.value)}
-                placeholder="username"
-              />
-            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
