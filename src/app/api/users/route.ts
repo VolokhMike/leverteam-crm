@@ -34,7 +34,12 @@ export const POST = apiHandler(async (req: NextRequest) => {
   const name = body?.name?.trim();
   const username = body?.username?.trim();
   const password = body?.password;
-  const role: Role = body?.role === "ADMIN" ? Role.ADMIN : Role.SALES;
+  const role: Role =
+    body?.role === "ADMIN"
+      ? Role.ADMIN
+      : body?.role === "TRAFFER"
+        ? Role.TRAFFER
+        : Role.SALES;
 
   if (!name || !username || !password) {
     return NextResponse.json(

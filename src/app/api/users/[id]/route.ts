@@ -46,7 +46,8 @@ export const PATCH = apiHandler(async (req: NextRequest, { params }: Ctx) => {
 
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
   if ("telegram" in body) data.telegram = body.telegram?.trim() || null;
-  if (body.role === "ADMIN" || body.role === "SALES") data.role = body.role as Role;
+  if (body.role === "ADMIN" || body.role === "SALES" || body.role === "TRAFFER")
+    data.role = body.role as Role;
 
   // Смена логина: проверяем длину и уникальность (исключая самого пользователя).
   if (typeof body.username === "string" && body.username.trim()) {
@@ -75,7 +76,10 @@ export const PATCH = apiHandler(async (req: NextRequest, { params }: Ctx) => {
   }
 
   // Prevent an admin from demoting/deactivating themselves out of access.
-  if (params.id === user!.id && (data.role === "SALES" || data.active === false)) {
+  if (
+    params.id === user!.id &&
+    ((data.role && data.role !== "ADMIN") || data.active === false)
+  ) {
     return NextResponse.json(
       { error: "Нельзя понизить или деактивировать самого себя" },
       { status: 400 },
