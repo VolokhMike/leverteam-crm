@@ -21,7 +21,16 @@ export const GET = apiHandler(async (req: NextRequest) => {
     select: userPublicSelect,
     orderBy: [{ role: "asc" }, { createdAt: "asc" }],
   });
-  return NextResponse.json(users);
+
+  // Счётчик «Лиды» зависит от роли:
+  //  - продажник → закреплённые за ним лиды (salesRepId);
+  //  - трафер/админ → приведённые им лиды (trafferId).
+  const shaped = users.map((u) => {
+    const c = u._count as { leads: number; traffedLeads: number };
+    const leads = u.role === "SALES" ? c.leads : c.traffedLeads;
+    return { ...u, _count: { leads } };
+  });
+  return NextResponse.json(shaped);
 });
 
 // POST /api/users  — create employee (admin only)

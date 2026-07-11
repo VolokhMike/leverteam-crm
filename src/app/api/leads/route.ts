@@ -88,17 +88,20 @@ export const POST = apiHandler(async (req: NextRequest) => {
 
   // Кто трафер (привёл лида):
   //  - трафер: он сам (автоматически);
-  //  - админ: как указано (опционально);
+  //  - админ: как указано, иначе он сам (лид добавил админ — считаем его источником);
   //  - продажник: как указано (обычно не заполняется).
-  const trafferId = traffer ? user.id : body.trafferId ?? null;
+  const attributingToAdmin = !traffer && !body.trafferId && isAdmin(user);
+  const trafferId = traffer
+    ? user.id
+    : body.trafferId ?? (isAdmin(user) ? user.id : null);
 
   // Для отображения в карточке сохраняем и текстовые поля трафера.
   const trafferName = traffer
     ? user.name ?? user.username
-    : body.trafferName || null;
+    : body.trafferName || (attributingToAdmin ? user.name ?? user.username : null);
   const trafferUsername = traffer
     ? `@${user.username}`
-    : body.trafferUsername || null;
+    : body.trafferUsername || (attributingToAdmin ? `@${user.username}` : null);
 
   // Place at the bottom of the target column.
   const last = await prisma.lead.findFirst({

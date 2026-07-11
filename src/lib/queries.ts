@@ -30,5 +30,7 @@ export const userPublicSelect = {
   role: true,
   active: true,
   createdAt: true,
-  _count: { select: { leads: true } },
+  // leads = закреплённые как продажник (salesRepId);
+  // traffedLeads = приведённые как трафер/админ-источник (trafferId).
+  _count: { select: { leads: true, traffedLeads: true } },
 } satisfies Prisma.UserSelect;

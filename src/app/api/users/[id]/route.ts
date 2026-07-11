@@ -26,13 +26,27 @@ export const GET = apiHandler(async (_req: NextRequest, { params }: Ctx) => {
   });
   if (!profile) return NextResponse.json({ error: "Сотрудник не найден" }, { status: 404 });
 
+  // Релевантные лиды зависят от роли: продажник → закреплённые (salesRepId),
+  // трафер/админ → приведённые им (trafferId).
+  const leadWhere =
+    profile.role === "SALES"
+      ? { salesRepId: params.id }
+      : { trafferId: params.id };
+
   const leads = await prisma.lead.findMany({
-    where: { salesRepId: params.id },
+    where: leadWhere,
     include: leadInclude,
     orderBy: [{ pinned: "desc" }, { updatedAt: "desc" }],
   });
 
-  return NextResponse.json({ ...profile, leads });
+  const c = profile._count as { leads: number; traffedLeads: number };
+  const leadCount = profile.role === "SALES" ? c.leads : c.traffedLeads;
+
+  return NextResponse.json({
+    ...profile,
+    _count: { leads: leadCount },
+    leads,
+  });
 });
 
 // PATCH /api/users/:id — update name/telegram/role/active/password (admin only)
